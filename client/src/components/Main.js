@@ -1,9 +1,12 @@
 import React, {useEffect, useState} from 'react';
 import Nav from "./Nav";
+import Modal from './Modal';
 
 const Main = ({socket}) => {
     const [todo, setTodo] = useState("");
     const [todoList, setTodoList] = useState([]);
+    const [showModal, setShowModal] = useState(false);
+	const [selectedItemID, setSelectedItemID] = useState("");
 
     // Generate random string as TODO ID
     const generateID = () => Math.random().toString(36).substring(2, 10);
@@ -17,6 +20,14 @@ const Main = ({socket}) => {
         })
         setTodo('');
     };
+
+    const deleteTodo = (id) => socket.emit('deleteTodo', id);
+
+    const toggleModal = (itemId) => {
+        socket.emit('viewComments', itemId);
+        setSelectedItemID(itemId);
+        setShowModal(!showModal);
+    }
 
     useEffect(() => {
         const fetchTodo = async() => {
@@ -43,12 +54,20 @@ const Main = ({socket}) => {
                 <div className='todo__item' key={item.id}>
                     <p>{item.todo}</p>
                     <div>
-                        <button className='commentsBtn'>View Comments</button>
-                        <button className='deleteBtn'>DELETE</button>
+                        <button className='commentsBtn' onClick={() => toggleModal(item.id)}>View Comments</button>
+                        <button className='deleteBtn' onClick={() => deleteTodo(item.id)}>DELETE</button>
                     </div>
                 </div>
                 ))}
             </div>
+            {showModal ? (
+                <Modal showModal={showModal}
+					setShowModal={setShowModal}
+					selectedItemID={selectedItemID}
+					socket={socket} />
+            ) : (
+                ""
+            )}
         </div>
     );
 }

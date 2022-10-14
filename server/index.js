@@ -26,6 +26,29 @@ socketIO.on('connection', (socket) => {
         socket.emit("todos", todoList);
     });
 
+    socket.on('deleteTodo', (id) => {
+        todoList = todoList.filter((todo) => todo.id !== id);
+        socket.emit("todos", todoList);
+    })
+
+    socket.on('viewComments', (id) => {
+        for(let i = 0; i < todoList.length; i++){
+            if (id === todoList[i].id){
+                socket.emit("commentsReceived", todoList[i])
+            }
+        }
+    })
+
+    socket.on("updateComment", (data) => {
+        const {user, todoID, comment} = data;
+        for (let i = 0; i < todoList.length; i++){
+            if (todoID === todoList[i].id){
+                todoList[i].comments.push({name: user, text: comment});
+                socket.emit("commentsReceived", todoList[i])
+            }
+        }
+    })
+
     socket.on('disconnect', () => {
         socket.disconnect()
         console.log(`🔥: A user disconnected!`);
