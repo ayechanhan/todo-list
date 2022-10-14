@@ -1,21 +1,30 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import Nav from "./Nav";
 
-const Main = socket => {
+const Main = ({socket}) => {
     const [todo, setTodo] = useState("");
+    const [todoList, setTodoList] = useState([]);
 
     // Generate random string as TODO ID
     const generateID = () => Math.random().toString(36).substring(2, 10);
 
     const handleAddTodo = e => {
         e.preventDefault();
-        console.log({
+        socket.emit("addTodo", {
             id: generateID(),
             todo,
             comments: [],
-        });
+        })
         setTodo('');
     };
+
+    useEffect(() => {
+        const fetchTodo = async() => {
+            fetch("http://localhost:4000/api/").then((res) => res.json()).then((data) => setTodoList(data)).catch((err) => console.log(err))
+        }
+        fetchTodo()
+        socket.on("todos", (data) => setTodoList(data))
+    }, [socket]);
 
     return(
         <div>
@@ -30,27 +39,15 @@ const Main = socket => {
                 <button className='form__cta'>ADD TODO</button>
             </form>
             <div className='todo__container'>
-                <div className='todo__item'>
-                    <p>Contributing to open-source</p>
+                {todoList.map((item) => (
+                <div className='todo__item' key={item.id}>
+                    <p>{item.todo}</p>
                     <div>
                         <button className='commentsBtn'>View Comments</button>
                         <button className='deleteBtn'>DELETE</button>
                     </div>
                 </div>
-                <div className='todo__item'>
-                    <p>Coffee chat with the team</p>
-                    <div>
-                        <button className='commentsBtn'>View Comments</button>
-                        <button className='deleteBtn'>DELETE</button>
-                    </div>
-                </div>
-                <div className='todo__item'>
-                    <p>Work on my side projects</p>
-                    <div>
-                        <button className='commentsBtn'>View Comments</button>
-                        <button className='deleteBtn'>DELETE</button>
-                    </div>
-                </div>
+                ))}
             </div>
         </div>
     );

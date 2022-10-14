@@ -7,14 +7,24 @@ app.use(express.json());
 
 const http = require('http').Server(app);
 const cors = require('cors')
+
+app.use(cors())
+
 const socketIO = require('socket.io')(http, {
     cors:{
-        origin: 'http://localhost:3000'
+        origin: 'http://localhost:3000/'
     }
 })
 
+let todoList = [];
+
 socketIO.on('connection', (socket) => {
     console.log(`⚡: ${socket.id} user just connected!`);
+
+    socket.on('addTodo', (todo) => {
+        todoList.unshift(todo);
+        socket.emit("todos", todoList);
+    });
 
     socket.on('disconnect', () => {
         socket.disconnect()
@@ -23,11 +33,9 @@ socketIO.on('connection', (socket) => {
 })
 
 app.get("/api", async (req, res) => {
-    res.json({
-        message: "Hello World",
-    });
+    res.json(todoList);
 });
 
-app.listen(PORT, () => {
+http.listen(PORT, () => {
     console.log(`Server Running on ${PORT}`)
 })
