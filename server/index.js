@@ -7,6 +7,8 @@ app.use(express.json());
 
 const http = require('http').Server(app);
 const cors = require('cors')
+const {Novu} = require('@novu/node');
+const novu = new Novu("ff89d685ab3274507b86ea4da07fd0a3")
 
 app.use(cors())
 
@@ -18,12 +20,26 @@ const socketIO = require('socket.io')(http, {
 
 let todoList = [];
 
+const sendNotification = async (template_id) => {
+    try {
+        const result = await novu.trigger(template_id, {
+            to: {
+                subscriberId: "634917b6e2a2de81df1a73a7",
+            },
+        });
+        console.log(result);
+    } catch (err) {
+        console.error("Error >>>>", { err });
+    }
+};
+
 socketIO.on('connection', (socket) => {
     console.log(`⚡: ${socket.id} user just connected!`);
 
     socket.on('addTodo', (todo) => {
         todoList.unshift(todo);
         socket.emit("todos", todoList);
+        sendNotification("test");
     });
 
     socket.on('deleteTodo', (id) => {
